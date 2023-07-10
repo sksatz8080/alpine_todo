@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Todo List App</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css">
+  <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+  <script defer src="https://cdn.jsdelivr.net/npm/@alpinejs/persist@3.x.x/dist/cdn.min.js"></script>
+
+  <script src="https://unpkg.com/alpinejs" defer></script>
+</head>
+<body>
+  <div class="container mx-auto py-8" x-data="todoList()" x-init="loadTasks" x-persist="tasks">
+    <div class="flex items-center justify-between mb-4">
+      <h1 class="text-2xl font-bold">Todo List</h1>
+      <p x-text="remainingTasks.length + (remainingTasks.length === 1 ? ' task' : ' tasks') + ' remaining'"></p>
+    </div>
+
+    <form x-on:submit.prevent="addTask">
+      <div class="flex mb-4">
+        <input class="rounded-l-lg border-t mr-0 border-b border-l text-gray-800 border-gray-200 bg-white px-2 py-2" type="text" placeholder="Add a new task..." x-model="taskInput">
+        <button class="px-4 rounded-r-lg bg-blue-500 text-white font-bold p-2" type="submit">Add</button>
+      </div>
+    </form>
+
+    <ul class="border border-gray-200 rounded-md shadow-sm">
+      <template x-for="(task, index) in filteredTasks" :key="index">
+        <li class="flex items-center justify-between py-2 border-b border-gray-200 last:border-b-0">
+          <div class="flex items-center w-full">
+            <input type="checkbox" class="mr-4 ml-4" x-model="task.completed" x-on:change="saveTasks">
+            <span class="flex-grow text-center" x-text="task.description" :class="{ 'line-through': task.completed }"></span>
+            <button class="text-red-500 ml-auto mr-4" x-on:click="deleteTask(index); saveTasks">Delete</button>
+          </div>
+        </li>
+      </template>
+    </ul>  
+    
+    
+    
+    
+
+    <div class="mt-4">
+      <span class="text-blue-500">Filter:</span>
+      <button class="mr-2" x-on:click="setFilter('all')" :class="{ 'font-bold': activeFilter === 'all' }">All</button>
+      |
+      <button class="mr-2" x-on:click="setFilter('active')" :class="{ 'font-bold': activeFilter === 'active' }">Active</button>
+      |
+      <button x-on:click="setFilter('completed')" :class="{ 'font-bold': activeFilter === 'completed' }">Completed</button>
+    </div>
+
+    <div class="mt-4">
+      <button x-show="tasks.length > 0" x-on:click="clearAllTasks" class="text-red-500">Clear All</button>
+    </div>
+  </div>
+
+  <script>
+    function todoList() {
+      return {
+        tasks: [],
+        taskInput: '',
+        activeFilter: 'all',
+        addTask() {
+          if (this.taskInput.trim() !== '') {
+            this.tasks.push({
+              description: this.taskInput,
+              completed: false
+            });
+            this.taskInput = '';
+          }
+          this.saveTasks();
+        },
+        deleteTask(index) {
+          this.tasks.splice(index, 1);
+          this.saveTasks();
+        },
+        setFilter(filter) {
+          this.activeFilter = filter;
+        },
+        get filteredTasks() {
+          if (this.activeFilter === 'active') {
+            return this.tasks.filter(task => !task.completed);
+          } else if (this.activeFilter === 'completed') {
+            return this.tasks.filter(task => task.completed);
+          }
+          return this.tasks;
+        },
+        get remainingTasks() {
+          return this.tasks.filter(task => !task.completed);
+        },
+        saveTasks() {
+          localStorage.setItem('tasks', JSON.stringify(this.tasks));
+        },
+        loadTasks() {
+          const savedTasks = localStorage.getItem('tasks');
+          if (savedTasks) {
+            this.tasks = JSON.parse(savedTasks);
+          }
+        },
+        clearAllTasks() {
+          this.tasks = [];
+          this.saveTasks();
+        }
+      };
+    }
+  </script>
+</body>
+</html>
